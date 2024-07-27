@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-# from models import Student, Subject, Grade, get_db
+# app/routes.py
+
+from pydantic import BaseModel
+from fastapi import APIRouter
+from app.db_conn import SessionLocal
+from app.models import Student, Subject, Grade
 
 router = APIRouter()
 
@@ -8,51 +11,122 @@ router = APIRouter()
 def read_root():
     return {"message": "Welcome to the Grading Service"}
 
-# @router.post("/students/", response_model=Student)
-# def create_student(name: str, db: Session = Depends(get_db)):
-#     student = Student(name=name)
-#     db.add(student)
-#     db.commit()
-#     db.refresh(student)
-#     return student
+#################################################
+# student CRUD operations pydantic models
+class CreateStudentScheme(BaseModel):
+    name: str
+    
+class StudentScheme(BaseModel):
+    id: int
+    name: str
+    
+class StudentsScheme(BaseModel):
+    students: list[StudentScheme]
 
-# @router.post("/subjects/", response_model=Subject)
-# def create_subject(name: str, db: Session = Depends(get_db)):
-#     subject = Subject(name=name)
-#     db.add(subject)
-#     db.commit()
-#     db.refresh(subject)
-#     return subject
 
-# @router.post("/grades/")
-# def submit_grade(student_id: int, subject_id: int, grade: int, db: Session = Depends(get_db)):
-#     grade_entry = db.query(Grade).filter(Grade.student_id == student_id, Grade.subject_id == subject_id).first()
-#     if grade_entry:
-#         grade_entry.grade = grade
-#     else:
-#         grade_entry = Grade(student_id=student_id, subject_id=subject_id, grade=grade)
-#         db.add(grade_entry)
-#     db.commit()
-#     return {"message": "Grade submitted successfully"}
+### Student 
 
-# @router.get("/grades/subject/{subject_id}")
-# def get_grades_by_subject(subject_id: int, db: Session = Depends(get_db)):
-#     grades = db.query(Grade).filter(Grade.subject_id == subject_id).all()
-#     if not grades:
-#         raise HTTPException(status_code=404, detail="Subject not found")
-#     grades_list = [grade.grade for grade in grades]
-#     return {
-#         "number_of_students": len(grades_list),
-#         "average_grade": sum(grades_list) / len(grades_list) if grades_list else 0,
-#         "median_grade": sorted(grades_list)[len(grades_list) // 2] if grades_list else 0
-#     }
+@router.post("/students/")
+def create_student(data: CreateStudentScheme):
+    db = SessionLocal()
+    student = Student(name=data.name)
+    new_student = student.create_student(db)
+    print('new_student:', new_student)
+    return new_student
 
-# @router.get("/grades/student/{student_id}")
-# def get_grades_by_student(student_id: int, db: Session = Depends(get_db)):
-#     grades = db.query(Grade).filter(Grade.student_id == student_id).all()
-#     if not grades:
-#         raise HTTPException(status_code=404, detail="Student not found")
-#     return {
-#         "grades": [{"subject_id": grade.subject_id, "grade": grade.grade} for grade in grades],
-#         "average_grade": sum(grade.grade for grade in grades) / len(grades) if grades else 0
-#     }
+@router.get("/students/{student_id}")
+def read_student(student_id: int):
+    db = SessionLocal()
+    student = Student(id=student_id)
+    return student.read_student(db)
+
+@router.get("/students/")
+def read_all_students():
+    db = SessionLocal()
+    student = Student()
+    return student.read_all_students(db)
+
+# Subject 
+
+
+#################################################
+# subject CRUD operations pydantic models
+class CreateSubjectScheme(BaseModel):
+    name: str
+    
+class SubjectScheme(BaseModel):
+    id: int
+    name: str
+    
+class SubjectsScheme(BaseModel):
+    subjects: list[SubjectScheme]
+    
+@router.post("/subjects/")
+def create_subject(data: CreateSubjectScheme):
+    db = SessionLocal()
+    subject = Subject(name=data.name)
+    new_subject = subject.create_subject(db)
+    print('new_subject:', new_subject)
+    return new_subject
+
+@router.get("/subjects/")
+def read_all_subjects():
+    db = SessionLocal()
+    subject = Subject()
+    return subject.read_all_subjects(db)
+
+
+#################################################
+# Grades
+class CreateGradeScheme(BaseModel):
+    student_id: int
+    subject_id: int
+    grade: int
+    
+class GradeScheme(BaseModel):
+    id: int
+    student_id: int
+    subject_id: int
+    grade: int
+    
+class GradesBySubjectScheme(BaseModel):
+    number_of_students: int
+    average_grade: float
+    median_grade: float
+    
+class GradeDetailsScheme(BaseModel):
+    subject_id: int
+    grade: int
+    
+class GradesByStudentScheme(BaseModel):
+    grades: list[GradeDetailsScheme]
+    average_grade: float
+    
+@router.post("/grades/")
+def create_grade(data: CreateGradeScheme):
+    db = SessionLocal()
+    grade = Grade(student_id=data.student_id, subject_id=data.subject_id, grade=data.grade)
+    new_grade = grade.create_grade(db)
+    print('new_grade:', new_grade)
+    return new_grade
+
+@router.get("/grades/")
+def read_all_grades():
+    db = SessionLocal()
+    grade = Grade()
+    return grade.read_all_grades(db)
+
+# grades by subject
+@router.get("/grades/subject/{subject_id}")
+def read_grades_by_subject(subject_id: int):
+    db = SessionLocal()
+    grade = Grade()
+    return grade.grades_by_subject(subject_id, db)
+
+# grades by student
+@router.get("/grades/student/{student_id}")
+def read_grades_by_student(student_id: int):
+    db = SessionLocal()
+    grade = Grade()
+    return grade.grades_by_student(student_id, db)
+    
