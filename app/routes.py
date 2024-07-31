@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter
 from app.db_conn import SessionLocal
 from app.models import Student, Subject, Grade
-from typing import List, Optional
+from typing import List
 
 router = APIRouter()
 
