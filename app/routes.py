@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter
 from app.db_conn import SessionLocal
 from app.models import Student, Subject, Grade
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ class StudentScheme(BaseModel):
     name: str
     
 class StudentsScheme(BaseModel):
-    students: list[StudentScheme]
+    students: List[StudentScheme]
 
 
 ### Student 
@@ -59,7 +60,7 @@ class SubjectScheme(BaseModel):
     name: str
     
 class SubjectsScheme(BaseModel):
-    subjects: list[SubjectScheme]
+    subjects: List[SubjectScheme]
     
 @router.post("/subjects/")
 def create_subject(data: CreateSubjectScheme):
@@ -99,7 +100,7 @@ class GradeDetailsScheme(BaseModel):
     grade: int
     
 class GradesByStudentScheme(BaseModel):
-    grades: list[GradeDetailsScheme]
+    grades: List[GradeDetailsScheme]
     average_grade: float
     
 @router.post("/grades/")

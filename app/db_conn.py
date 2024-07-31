@@ -1,15 +1,14 @@
 # app/db/db_connection.py
 
-# app/db/db_connection.py
 import os
 import dotenv
-from sqlalchemy import create_engine, orm, MetaData
+from sqlalchemy import create_engine, orm, MetaData, text
 from sqlalchemy.ext.declarative import declarative_base
 # import models to create tables
 from app.models import Base, Student, Subject, Grade
 
 # Load environment variables safely
-dotenv.load_dotenv()
+dotenv.load_dotenv('.env')
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 print('DATABASE_URL:', DATABASE_URL)
@@ -29,9 +28,27 @@ SessionLocal = orm.sessionmaker(bind=engine)
 
 # Function to get a new session
 def get_db():
-    db = SessionLocal()
+    try:
+        db = SessionLocal()
+    except Exception as e:
+        print('DATABASE_URL:', DATABASE_URL)
+        print(e)
+        raise ConnectionError("Failed to connect to database") from e
     try:
         yield db
     finally:
         db.close()
-        
+
+
+# if main check connection to database
+if __name__ == "__main__":
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        print('Connection to database is successful')
+    except Exception as e:
+        print('DATABASE_URL:', DATABASE_URL)
+        print(e)
+        raise ConnectionError("Failed to connect to database") from e
+    finally:
+        db.close()

@@ -1,3 +1,5 @@
+# TODO: update from routes.py to schema.py
+
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -5,7 +7,7 @@ class StudentBase(BaseModel):
     name: str
 
 class StudentCreate(StudentBase):
-    pass
+    name: str
 
 class Student(StudentBase):
     id: int

@@ -22,9 +22,11 @@ docker-compose down
 docker rmi $(docker images -q) -f
 docker stop $(docker ps -a -q)
 docker rm $(docker ps -a -q)
+docker-compose up --build
 ```
 
 Run the following commands to build and run the Docker container:
+
 ```bash
 docker build -t api .
 docker run -p 8000:8000 api
